@@ -38,18 +38,8 @@ function product {
 }
 
 function product_list {
-  local USER_PRODUCT_COUNT=$(curl -s -b dlsite-cookie.txt https://play.dlsite.com/api/product_count | jq '.user')
-  local COUNT=1
-  local PRODUCT_LIST=
-
-  while ((USER_PRODUCT_COUNT > 0)); do
-    local PRODUCT_WORKS=$(curl -s -b dlsite-cookie.txt "https://play.dlsite.com/api/purchases?page=$COUNT" | jq '.works')
-    local PRODUCT_LIST="$PRODUCT_LIST$PRODUCT_WORKS"
-    ((COUNT++))
-    local USER_PRODUCT_COUNT=$(($USER_PRODUCT_COUNT - 50))
-  done
-
-  PRODUCT_LIST=$(echo $PRODUCT_LIST | jq -s 'add')
+  local WORKNO_LIST=$(curl -s -b dlsite-cookie.txt https://play.dlsite.com/api/v3/content/sales?last=0 | jq '[.[].workno]')
+  local PRODUCT_LIST=$(curl -X POST -s -b dlsite-cookie.txt -H "Content-Type: application/json" -d "$WORKNO_LIST" https://play.dlsite.com/api/v3/content/works | jq -c '.works')
 
   echo $PRODUCT_LIST | jq -c '.[]' | while read d; do
     WORKNO=$(echo $d | jq -r -c '.workno')
